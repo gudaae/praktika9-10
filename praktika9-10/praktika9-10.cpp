@@ -139,214 +139,107 @@ int main() {
 
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <locale.h>
+#include <cstring>
 using namespace std;
 
-enum Style { FUNK, SOUL, ROCK, OTHER };
-struct Track {
-    string name;
+struct Album {
+    char name[50];
+    char artist[50];
+    char style[20];
+    int year;
     int duration;
 };
-struct Album {
-    string name;
-    string artist;
-    Style style;
-    int year;
-    int totalDuration;
-    Track tracks[10];
-    int trackCount;
-};
-string styleToString(Style s) {
-    switch (s) {
-    case FUNK: return "Funk";
-    case SOUL: return "Soul";
-    case ROCK: return "Rock";
-    default: return "Other";
-    }
-}
-Style stringToStyle(string s) {
-    if (s == "Funk") return FUNK;
-    if (s == "Soul") return SOUL;
-    if (s == "Rock") return ROCK;
-    return OTHER;
-}
 void printAlbum(Album a) {
-    cout << "\nНазвание: " << a.name << endl;
-    cout << "Исполнитель: " << a.artist << endl;
-    cout << "Стиль: " << styleToString(a.style) << endl;
-    cout << "Год: " << a.year << endl;
-    cout << "Длительность: " << a.totalDuration << " сек" << endl;
-    for (int i = 0; i < a.trackCount; i++) {
-        cout << "  " << a.tracks[i].name << " (" << a.tracks[i].duration << " сек)" << endl;
-    }
+    cout << a.name << " - " << a.artist << " (" << a.style << ", " << a.year << ", " << a.duration << " сек)\n";
 }
-
-// Задание 1: чтение года выпуска из текстового файла
-
-
-void readYearsFromFile(Album albums[], int n, const char* filename) {
-    ifstream fin(filename);
-    if (!fin.is_open()) {
-        cout << "Не удалось открыть файл " << filename << endl;
-        return;
-    }
-
-    string albumName;
-    int year;
-    while (fin >> albumName >> year) {
-        for (int i = 0; i < n; i++) {
-            if (albums[i].name == albumName) {
-                albums[i].year = year;
-                break;
-            }
-        }
-    }
-    fin.close();
-    cout << "Данные о годах выпуска загружены из файла " << filename << endl;
-}
-
-
-// Задание 2: запись массива структур в бинарный файл
-
-
-void saveToBinaryFile(Album albums[], int n, const char* filename) {
-    ofstream fout(filename, ios::binary);
-    if (!fout.is_open()) {
-        cout << "Не удалось создать файл " << filename << endl;
-        return;
-    }
-
-    for (int i = 0; i < n; i++) {
-        char name[100] = { 0 };
-        char artist[100] = { 0 };
-        strcpy_s(name, albums[i].name.c_str());
-        strcpy_s(artist, albums[i].artist.c_str());
-
-        fout.write((char*)name, sizeof(name));
-        fout.write((char*)artist, sizeof(artist));
-        fout.write((char*)&albums[i].style, sizeof(albums[i].style));
-        fout.write((char*)&albums[i].year, sizeof(albums[i].year));
-        fout.write((char*)&albums[i].totalDuration, sizeof(albums[i].totalDuration));
-        fout.write((char*)&albums[i].trackCount, sizeof(albums[i].trackCount));
-
-        for (int j = 0; j < albums[i].trackCount; j++) {
-            char trackName[100] = { 0 };
-            strcpy_s(trackName, albums[i].tracks[j].name.c_str());
-            fout.write((char*)trackName, sizeof(trackName));
-            fout.write((char*)&albums[i].tracks[j].duration, sizeof(albums[i].tracks[j].duration));
-        }
-    }
-
-    fout.close();
-    cout << "Массив альбомов сохранён в бинарный файл " << filename << endl;
-}
-void loadFromBinaryFile(Album albums[], int& n, const char* filename) {
-    ifstream fin(filename, ios::binary);
-    if (!fin.is_open()) {
-        cout << "Не удалось открыть файл " << filename << endl;
-        return;
-    }
-    n = 0;
-    while (!fin.eof() && n < 20) {
-        char name[100] = { 0 };
-        char artist[100] = { 0 };
-
-        fin.read((char*)name, sizeof(name));
-        if (fin.eof()) break;
-
-        fin.read((char*)artist, sizeof(artist));
-        fin.read((char*)&albums[n].style, sizeof(albums[n].style));
-        fin.read((char*)&albums[n].year, sizeof(albums[n].year));
-        fin.read((char*)&albums[n].totalDuration, sizeof(albums[n].totalDuration));
-        fin.read((char*)&albums[n].trackCount, sizeof(albums[n].trackCount));
-
-        albums[n].name = string(name);
-        albums[n].artist = string(artist);
-
-        for (int j = 0; j < albums[n].trackCount; j++) {
-            char trackName[100] = { 0 };
-            fin.read((char*)trackName, sizeof(trackName));
-            fin.read((char*)&albums[n].tracks[j].duration, sizeof(albums[n].tracks[j].duration));
-            albums[n].tracks[j].name = string(trackName);
-        }
-        n++;
-    }
-    fin.close();
-    cout << "Массив альбомов загружен из бинарного файла " << filename << endl;
-}
-
 int main() {
     setlocale(LC_ALL, "Ru");
-
     Album albums[20];
     int n = 6;
-    albums[0].name = "Hybrid Theory";
-    albums[0].artist = "Linkin Park";
-    albums[0].style = ROCK;
-    albums[0].totalDuration = 2220;
-    albums[0].trackCount = 3;
-    albums[0].tracks[0] = { "Papercut", 185 };
-    albums[0].tracks[1] = { "One Step Closer", 156 };
-    albums[0].tracks[2] = { "In the End", 216 };
 
-    albums[1].name = "Meteora";
-    albums[1].artist = "Linkin Park";
-    albums[1].style = ROCK;
-    albums[1].totalDuration = 2160;
-    albums[1].trackCount = 3;
-    albums[1].tracks[0] = { "Somewhere I Belong", 214 };
-    albums[1].tracks[1] = { "Numb", 187 };
-    albums[1].tracks[2] = { "Breaking the Habit", 193 };
+    strcpy_s(albums[0].name, "Hybrid Theory");
+    strcpy_s(albums[0].artist, "Linkin Park");
+    strcpy_s(albums[0].style, "Rock");
+    albums[0].year = 0;
+    albums[0].duration = 2220;
 
-    albums[2].name = "Minutes to Midnight";
-    albums[2].artist = "Linkin Park";
-    albums[2].style = ROCK;
-    albums[2].totalDuration = 2700;
-    albums[2].trackCount = 3;
-    albums[2].tracks[0] = { "What I've Done", 215 };
-    albums[2].tracks[1] = { "Bleed It Out", 171 };
-    albums[2].tracks[2] = { "Shadow of the Day", 256 };
+    strcpy_s(albums[1].name, "Meteora");
+    strcpy_s(albums[1].artist, "Linkin Park");
+    strcpy_s(albums[1].style, "Rock");
+    albums[1].year = 0;
+    albums[1].duration = 2160;
 
-    albums[3].name = "Thriller";
-    albums[3].artist = "Michael Jackson";
-    albums[3].style = FUNK;
-    albums[3].totalDuration = 2520;
-    albums[3].trackCount = 3;
-    albums[3].tracks[0] = { "Wanna Be Startin' Somethin'", 363 };
-    albums[3].tracks[1] = { "Thriller", 357 };
-    albums[3].tracks[2] = { "Beat It", 258 };
+    strcpy_s(albums[2].name, "Thriller");
+    strcpy_s(albums[2].artist, "Michael Jackson");
+    strcpy_s(albums[2].style, "Funk");
+    albums[2].year = 0;
+    albums[2].duration = 2520;
 
-    albums[4].name = "Superfly";
-    albums[4].artist = "Curtis Mayfield";
-    albums[4].style = SOUL;
-    albums[4].totalDuration = 2400;
-    albums[4].trackCount = 3;
-    albums[4].tracks[0] = { "Little Child Runnin' Wild", 300 };
-    albums[4].tracks[1] = { "Pusherman", 300 };
-    albums[4].tracks[2] = { "Freddie's Dead", 300 };
+    strcpy_s(albums[3].name, "Superfly");
+    strcpy_s(albums[3].artist, "Curtis Mayfield");
+    strcpy_s(albums[3].style, "Soul");
+    albums[3].year = 0;
+    albums[3].duration = 2400;
 
-    albums[5].name = "Innervisions";
-    albums[5].artist = "Stevie Wonder";
-    albums[5].style = SOUL;
-    albums[5].totalDuration = 2640;
-    albums[5].trackCount = 3;
-    albums[5].tracks[0] = { "Living for the City", 259 };
-    albums[5].tracks[1] = { "Higher Ground", 204 };
-    albums[5].tracks[2] = { "Don't You Worry 'bout a Thing", 284 };
-    readYearsFromFile(albums, n, "years.txt");
+    strcpy_s(albums[4].name, "Innervisions");
+    strcpy_s(albums[4].artist, "Stevie Wonder");
+    strcpy_s(albums[4].style, "Soul");
+    albums[4].year = 0;
+    albums[4].duration = 2640;
 
-    cout << "\n===== Альбомы после загрузки годов выпуска =====" << endl;
-    for (int i = 0; i < n; i++) {
-        cout << albums[i].name << " - " << albums[i].artist << " (" << albums[i].year << ")" << endl;
+    strcpy_s(albums[5].name, "Minutes to Midnight");
+    strcpy_s(albums[5].artist, "Linkin Park");
+    strcpy_s(albums[5].style, "Rock");
+    albums[5].year = 0;
+    albums[5].duration = 2700;
+
+  //ЗАДАНИЕ 1
+    cout << "ЗАДАНИЕ 1\n";
+    ifstream fin("years.txt");
+    if (fin.is_open()) {
+        char name[50];
+        int year;
+        for (int i = 0; i < n; i++) {
+            fin >> name >> year;
+            for (int j = 0; j < n; j++) {
+                if (strcmp(albums[j].name, name) == 0) {
+                    albums[j].year = year;
+                    break;
+                }
+            }
+        }
+        fin.close();
     }
-    saveToBinaryFile(albums, n, "albums.bin");
-    Album loadedAlbums[20];
+    else {
+        cout << "Файл years.txt\n\n";
+    }
+    cout << "Альбомы после загрузки годов:\n";
+    for (int i = 0; i < n; i++) {
+        printAlbum(albums[i]);
+    }
+   //ЗАДАНИЕ 2
+    cout << "\nЗАДАНИЕ 2\n";
+    cout << "ЗАПИСЬ В БИНАРНЫЙ ФАЙЛ\n";
+
+    ofstream fout("albums.bin", ios::binary);
+    for (int i = 0; i < n; i++) {
+        fout.write((char*)&albums[i], sizeof(Album));
+    }
+    fout.close();
+    cout << "Сохранено " << n << " альбомов в albums.bin\n";
+    cout << "\nЧТЕНИЕ ИЗ БИНАРНОГО ФАЙЛА\n";
+    Album loaded[20];
     int loadedCount = 0;
-    loadFromBinaryFile(loadedAlbums, loadedCount, "albums.bin");
-    cout << "\n===== Загружено из бинарного файла =====" << endl;
+    ifstream fin2("albums.bin", ios::binary);
+    while (fin2.read((char*)&loaded[loadedCount], sizeof(Album)) && loadedCount < 20) {
+        loadedCount++;
+    }
+    fin2.close();
+    cout << "Загружено " << loadedCount << " альбомов из albums.bin\n\n";
+    cout << "Проверка загруженных данных:\n";
     for (int i = 0; i < loadedCount; i++) {
-        printAlbum(loadedAlbums[i]);
+        printAlbum(loaded[i]);
     }
     return 0;
 }
